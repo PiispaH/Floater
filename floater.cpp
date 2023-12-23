@@ -2,7 +2,33 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
+
+int find_valid_floater(std::string s, int index) {
+    // Finds next valid floater in a string starting from given index
+    // int index = s.find("floater");
+
+    std::vector<char> chars = {'(', '{', '[', ']', '}', ')', '\"'};
+    std::string order = "";
+    int next_floater = s.find("floater");
+    bool found;
+    int last_char_index = 0; 
+    for (int i = index; i < size(s); i++) {
+        char character = s[i];
+        found = (std::find(chars.begin(), chars.end(), character) != chars.end());
+        
+        if (found) {
+            if ((last_char_index < next_floater) && (next_floater < i)) {
+                order += 'X';
+                order += character;
+                next_floater = -1;
+            } else order += character;
+        }
+    }
+    std::cout << order;
+    return 0;
+}
 
 std::vector<int> find_next_floater(std::string s) {
     std::vector<int> v;
@@ -13,11 +39,9 @@ std::vector<int> find_next_floater(std::string s) {
     while (index != -1)
     {
         v.push_back(index);
-        // std::cout << index << " ";
         index = s.find("floater", index + 1);
     }
     
-    // std::cout << std::endl;
     return v;
 }
 
@@ -82,7 +106,9 @@ int main() {
         return 1;
     }
 
-    convert_floaters(file);
+    // convert_floaters(file);
+    std::string s = "f\"{type()} floaterfloater float er\"";
+    find_valid_floater(s, 0);
 
     /*
     std::string new_file = convert_floaters(file);
