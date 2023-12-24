@@ -5,47 +5,80 @@
 #include <algorithm>
 
 
+std::string remove_closed_brackets(std::string s) {
+    // Gets rid closed bracet pairs [({}]) -> [(])
+    int len = size(s);
+    std::string new_s = "";
+    char last = ' ';
+    for (int i = 0; i < len; i++) {
+        if (s[i] == ')' && last == '(') new_s = s.substr(0, i - 1);
+        else if (s[i] == '}' && last == '{') new_s = s.substr(0, i - 1);
+        else if (s[i] == ']' && last == '[') new_s = s.substr(0, i - 1);
+        else new_s += s[i];
+        last = s[i];
+    }
+
+    if (new_s != s) return remove_closed_brackets(new_s);
+    else return new_s;
+}
+
+bool convertable(std::string s) {
+    // Returns true if the instance is convertable
+    int index = s.find("X");
+    if (index == 0) return true;
+    else if (s[index - 1] == '\"' && s[index + 1] == '\"') return false;
+    else if (s[index - 1] == '\'' && s[index + 1] == '\'') return false;
+    else return true;
+}
+
 int find_valid_floater(std::string s, int index) {
     // Finds next valid floater in a string starting from given index
-    // int index = s.find("floater");
-
-    std::vector<char> chars = {'(', '{', '[', ']', '}', ')', '\"'};
+    std::vector<char> chars = {'(', '{', '[', ']', '}', ')', '\"', '\''};
     std::string order = "";
-    int next_floater = s.find("floater");
+    int next_floater = s.find("floater", index);
     bool found;
+    bool insert_floater = true;
     int last_char_index = 0; 
-    for (int i = index; i < size(s); i++) {
+    for (int i = 0; i < size(s); i++) {
         char character = s[i];
         found = (std::find(chars.begin(), chars.end(), character) != chars.end());
         
         if (found) {
-            if ((last_char_index < next_floater) && (next_floater < i)) {
+            if (insert_floater && (last_char_index < next_floater) && (next_floater < i)) {
                 order += 'X';
                 order += character;
-                next_floater = -1;
+                insert_floater = false;
+                last_char_index = i;
             } else order += character;
         }
     }
-    std::cout << order;
-    return 0;
+    order = remove_closed_brackets(order);
+    if (!convertable(order)) {
+        return find_valid_floater(s, next_floater + 7);
+    }
+    return next_floater;
 }
 
 std::vector<int> find_next_floater(std::string s) {
     std::vector<int> v;
-    int index = s.find("floater");
+    int index = find_valid_floater(s, 0);
     if (index == -1) {
         v.push_back(-1);
     }
     while (index != -1)
     {
         v.push_back(index);
-        index = s.find("floater", index + 1);
+        index = find_valid_floater(s, index + 1);
     }
     
     return v;
 }
 
 std::string convert_floaters(std::string file) {
+    // Takes a filename of a .flo file and makes a copy of that
+    // into a .py file with every floater converted into
+    // float so that the code is runnable in python. 
+
     std::string s;
     std::ifstream f_in(file);
     std::ofstream f_out("float.py");
@@ -76,6 +109,7 @@ std::string convert_floaters(std::string file) {
 }
 
 bool check_only_one_dot(std::string s) {
+    // Checks that the given string contains only a one dot (.)
     int index = s.find(".");
     if (index == -1) return false;
     else if (s.substr(index + 1).find(".") != -1) return false;
@@ -83,6 +117,7 @@ bool check_only_one_dot(std::string s) {
 }
 
 bool check_validity_of_filename(std::string filename) {
+    // Checks if the given string is a valid .flo file filename or not
     int index = filename.find(".flo");
     int len = size(filename);
     std::ifstream file(filename);
@@ -95,28 +130,21 @@ bool check_validity_of_filename(std::string filename) {
     return valid;
 }
 
-int main() {
-    // int argc, char** argv
-    // if (argc == 1) return 1;
-    // std::string file = argv[1];
-    std::string file = "float.flo";
+int main(int argc, char** argv) {
+    if (argc == 1) return 1;
+    std::string file = argv[1];
 
     if (!check_validity_of_filename(file)) {
         std::cout << "Invalid filename: " << file << std::endl;
         return 1;
     }
 
-    // convert_floaters(file);
-    std::string s = "f\"{type()} floaterfloater float er\"";
-    find_valid_floater(s, 0);
-
-    /*
     std::string new_file = convert_floaters(file);
     if (file != "") {
         std::cout << "\nConversion completed, float on!" << std::endl;
         std::cout << "======= Program output =======\n\n";
         std::cout << system(new_file.c_str()) << std::endl;
     }
-    */
+
     return 0;
 }
