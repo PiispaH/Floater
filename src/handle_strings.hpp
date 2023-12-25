@@ -1,9 +1,30 @@
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
 
+
+bool check_only_one_dot(std::string s) {
+    // Checks that the given string contains only a one dot (.)
+    int index = s.find(".");
+    if (index == -1) return false;
+    else if (s.substr(index + 1).find(".") != -1) return false;
+    return true;
+}
+
+bool check_validity_of_filename(std::string filename) {
+    // Checks if the given string is a valid .flo file filename or not
+    int index = filename.find(".flo");
+    int len = size(filename);
+    std::ifstream file(filename);
+    bool valid = true;
+
+    if (len <= 5) valid = false;  // Filename is longer than just .flo
+    else if (!check_only_one_dot(filename)) valid = false;  // a.b.flo not possible
+    else if (index != len - 4) valid = false;  // Final 4 characters must be .flo
+    else if (!file.good()) valid = false;  // Finally check that the file exists 
+    return valid;
+}
 
 std::string remove_closed_brackets(std::string s) {
     // Gets rid closed bracet pairs [({}]) -> [(])
@@ -59,7 +80,7 @@ int find_valid_floater(std::string s, int index) {
     return next_floater;
 }
 
-std::vector<int> find_next_floater(std::string s) {
+std::vector<int> valid_floaters_for_row(std::string s) {
     std::vector<int> v;
     int index = find_valid_floater(s, 0);
     if (index == -1) {
@@ -85,7 +106,7 @@ std::string convert_floaters(std::string file) {
     std::vector<int> indexes;
 
     while (std::getline(f_in, s)) {
-        indexes = find_next_floater(s);  // Get the starting indices of the floater -instances
+        indexes = valid_floaters_for_row(s);  // Get the starting indices of the floater -instances
         if (size(indexes) == 1 && indexes[0] == -1) {
             // If no instances of floater is found, keep the row as it is
             f_out << s << std::endl;
@@ -106,45 +127,4 @@ std::string convert_floaters(std::string file) {
     }
     f_in.close();
     return "float.py";
-}
-
-bool check_only_one_dot(std::string s) {
-    // Checks that the given string contains only a one dot (.)
-    int index = s.find(".");
-    if (index == -1) return false;
-    else if (s.substr(index + 1).find(".") != -1) return false;
-    return true;
-}
-
-bool check_validity_of_filename(std::string filename) {
-    // Checks if the given string is a valid .flo file filename or not
-    int index = filename.find(".flo");
-    int len = size(filename);
-    std::ifstream file(filename);
-    bool valid = true;
-
-    if (len <= 5) valid = false;  // Filename is longer than just .flo
-    else if (!check_only_one_dot(filename)) valid = false;  // a.b.flo not possible
-    else if (index != len - 4) valid = false;  // Final 4 characters must be .flo
-    else if (!file.good()) valid = false;  // Finally check that the file exists 
-    return valid;
-}
-
-int main(int argc, char** argv) {
-    if (argc == 1) return 1;
-    std::string file = argv[1];
-
-    if (!check_validity_of_filename(file)) {
-        std::cout << "Invalid filename: " << file << std::endl;
-        return 1;
-    }
-
-    std::string new_file = convert_floaters(file);
-    if (file != "") {
-        std::cout << "\nConversion completed, float on!" << std::endl;
-        std::cout << "======= Program output =======\n\n";
-        std::cout << system(new_file.c_str()) << std::endl;
-    }
-
-    return 0;
 }
